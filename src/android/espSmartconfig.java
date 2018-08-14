@@ -33,11 +33,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class espSmartconfig extends CordovaPlugin {
-	
-	private WifiManager wifiManager;
-	CallbackContext receivingCallbackContext = null;
-	IEsptouchTask mEsptouchTask;
-	private static final String TAG = "espSmartconfig";
+
+    private WifiManager wifiManager;
+    CallbackContext receivingCallbackContext = null;
+    IEsptouchTask mEsptouchTask;
+    private static final String TAG = "espSmartconfig";
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -45,9 +45,10 @@ public class espSmartconfig extends CordovaPlugin {
         this.wifiManager = (WifiManager) cordova.getActivity().getSystemService(Context.WIFI_SERVICE);
     }
 
-	@Override
-    public boolean execute(String action, final JSONArray args,final CallbackContext callbackContext) throws JSONException{
-        receivingCallbackContext = callbackContext;    //modified by lianghuiyuan
+    @Override
+    public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext)
+            throws JSONException {
+        receivingCallbackContext = callbackContext; // modified by lianghuiyuan
         if (action.equals("startConfig")) {
             final String apSsid = args.getString(0);
             final String apBssid = args.getString(1);
@@ -56,16 +57,17 @@ public class espSmartconfig extends CordovaPlugin {
             final String taskResultCountStr = args.getString(4);
             final int taskResultCount = Integer.parseInt(taskResultCountStr);
             final Object mLock = new Object();
-            cordova.getThreadPool().execute(
-            new Runnable() {
+            cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     synchronized (mLock) {
-                        boolean isSsidHidden = false;
-                        if (isSsidHiddenStr.equals("YES")) {
-                            isSsidHidden = true;
-                        }
-                        mEsptouchTask = new EsptouchTask(apSsid, apBssid, apPassword,
-                        isSsidHidden, cordova.getActivity().getApplicationContext());
+                        // boolean isSsidHidden = false;
+                        // if (isSsidHiddenStr.equals("YES")) {
+                        // isSsidHidden = true;
+                        // }
+                        // mEsptouchTask = new EsptouchTask(apSsid, apBssid, apPassword,
+                        // isSsidHidden, cordova.getActivity().getApplicationContext());
+                        mEsptouchTask = new EsptouchTask(apSsid, apBssid, apPassword, null,
+                                cordova.getActivity().getApplicationContext());
                         mEsptouchTask.setEsptouchListener(myListener);
                     }
                     List<IEsptouchResult> resultList = mEsptouchTask.executeForResults(taskResultCount);
@@ -74,62 +76,55 @@ public class espSmartconfig extends CordovaPlugin {
                         int count = 0;
                         final int maxDisplayCount = taskResultCount;
                         if (firstResult.isSuc()) {
-                             StringBuilder sb = new StringBuilder();
-                             for (IEsptouchResult resultInList : resultList) {
-                            	 sb.append("device"+count+",bssid="
-                            			 + resultInList.getBssid()
-                            			 + ",InetAddress="
-                            			 + resultInList.getInetAddress()
-                            					 .getHostAddress() + ".");
-                            	 count++;
-                            	 if (count >= maxDisplayCount) {
-                            		 break;
-                            	 }
-                             }
-                             if (count < resultList.size()) {
-                            	 sb.append("\nthere's " + (resultList.size() - count)
-                            			 + " more resultList(s) without showing\n");
-                             }
-                            PluginResult result = new PluginResult(PluginResult.Status.OK, "Finished: "+sb);
-                            result.setKeepCallback(true);           // keep callback after this call
+                            StringBuilder sb = new StringBuilder();
+                            for (IEsptouchResult resultInList : resultList) {
+                                sb.append("device" + count + ",bssid=" + resultInList.getBssid() + ",InetAddress="
+                                        + resultInList.getInetAddress().getHostAddress() + ".");
+                                count++;
+                                if (count >= maxDisplayCount) {
+                                    break;
+                                }
+                            }
+                            if (count < resultList.size()) {
+                                sb.append("\nthere's " + (resultList.size() - count)
+                                        + " more resultList(s) without showing\n");
+                            }
+                            PluginResult result = new PluginResult(PluginResult.Status.OK, "Finished: " + sb);
+                            result.setKeepCallback(true); // keep callback after this call
                             receivingCallbackContext.sendPluginResult(result);
-                            //receivingCallbackContext.success("finished");
+                            // receivingCallbackContext.success("finished");
                         } else {
                             PluginResult result = new PluginResult(PluginResult.Status.ERROR, "No Device Found!");
-                            result.setKeepCallback(true);           // keep callback after this call
+                            result.setKeepCallback(true); // keep callback after this call
                             receivingCallbackContext.sendPluginResult(result);
                         }
                     }
                 }
-            }//end runnable
+            }// end runnable
             );
             return true;
-        }
-        else if (action.equals("stopConfig")) {
+        } else if (action.equals("stopConfig")) {
             mEsptouchTask.interrupt();
             PluginResult result = new PluginResult(PluginResult.Status.OK, "Cancel Success");
-            result.setKeepCallback(true);           // keep callback after this call
+            result.setKeepCallback(true); // keep callback after this call
             receivingCallbackContext.sendPluginResult(result);
             return true;
-        }
-        else if (action.equals("getNetworklist")) {
-			return this.getNetworklist(callbackContext, args);
-        }
-        else{
-            callbackContext.error("can not find the function "+action);
+        } else if (action.equals("getNetworklist")) {
+            return this.getNetworklist(callbackContext, args);
+        } else {
+            callbackContext.error("can not find the function " + action);
             return false;
         }
     }
 
-
-    /** Code cobtained from WiFiWizard by hoerresb
-       *    This method uses the callbackContext.success method to send a JSONArray
-       *    of the scanned networks.
-       *
-       *    @param    callbackContext        A Cordova callback context
-       *    @param    data                   JSONArray with [0] == JSONObject
-       *    @return    true
-       */
+    /**
+     * Code cobtained from WiFiWizard by hoerresb This method uses the
+     * callbackContext.success method to send a JSONArray of the scanned networks.
+     *
+     * @param callbackContext A Cordova callback context
+     * @param data            JSONArray with [0] == JSONObject
+     * @return true
+     */
     private boolean getNetworklist(CallbackContext callbackContext, JSONArray data) {
         List<ScanResult> scanResults = wifiManager.getScanResults();
 
@@ -137,11 +132,11 @@ public class espSmartconfig extends CordovaPlugin {
 
         Integer numLevels = null;
 
-        if(!validateData(data)) {
+        if (!validateData(data)) {
             callbackContext.error("espSmartconfig: disconnectNetwork invalid data");
             Log.d(TAG, "espSmartconfig: disconnectNetwork invalid data");
             return false;
-        }else if (!data.isNull(0)) {
+        } else if (!data.isNull(0)) {
             try {
                 JSONObject options = data.getJSONObject(0);
 
@@ -164,22 +159,25 @@ public class espSmartconfig extends CordovaPlugin {
 
         for (ScanResult scan : scanResults) {
             /*
-             * @todo - breaking change, remove this notice when tidying new release and explain changes, e.g.:
-             *   0.y.z includes a breaking change to espSmartconfig.getNetworklist().
-             *   Earlier versions set scans' level attributes to a number derived from wifiManager.calculateSignalLevel.
-             *   This update returns scans' raw RSSI value as the level, per Android spec / APIs.
-             *   If your application depends on the previous behaviour, we have added an options object that will modify behaviour:
-             *   - if `(n == true || n < 2)`, `*.getNetworklist({numLevels: n})` will return data as before, split in 5 levels;
-             *   - if `(n > 1)`, `*.getNetworklist({numLevels: n})` will calculate the signal level, split in n levels;
-             *   - if `(n == false)`, `*.getNetworklist({numLevels: n})` will use the raw signal level;
+             * @todo - breaking change, remove this notice when tidying new release and
+             * explain changes, e.g.: 0.y.z includes a breaking change to
+             * espSmartconfig.getNetworklist(). Earlier versions set scans' level attributes
+             * to a number derived from wifiManager.calculateSignalLevel. This update
+             * returns scans' raw RSSI value as the level, per Android spec / APIs. If your
+             * application depends on the previous behaviour, we have added an options
+             * object that will modify behaviour: - if `(n == true || n < 2)`,
+             * `*.getNetworklist({numLevels: n})` will return data as before, split in 5
+             * levels; - if `(n > 1)`, `*.getNetworklist({numLevels: n})` will calculate the
+             * signal level, split in n levels; - if `(n == false)`,
+             * `*.getNetworklist({numLevels: n})` will use the raw signal level;
              */
 
             int level;
 
             if (numLevels == null) {
-              level = scan.level;
+                level = scan.level;
             } else {
-              level = wifiManager.calculateSignalLevel(scan.level, numLevels);
+                level = wifiManager.calculateSignalLevel(scan.level, numLevels);
             }
 
             JSONObject lvl = new JSONObject();
@@ -189,7 +187,7 @@ public class espSmartconfig extends CordovaPlugin {
                 lvl.put("BSSID", scan.BSSID);
                 lvl.put("frequency", scan.frequency);
                 lvl.put("capabilities", scan.capabilities);
-               // lvl.put("timestamp", scan.timestamp);
+                // lvl.put("timestamp", scan.timestamp);
                 returnList.put(lvl);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -201,8 +199,8 @@ public class espSmartconfig extends CordovaPlugin {
         callbackContext.success(returnList);
         return true;
     }
-	
-	//Code cobtained from WiFiWizard by hoerresb
+
+    // Code cobtained from WiFiWizard by hoerresb
     private boolean validateData(JSONArray data) {
         try {
             if (data == null || data.get(0) == null) {
@@ -210,21 +208,21 @@ public class espSmartconfig extends CordovaPlugin {
                 return false;
             }
             return true;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             receivingCallbackContext.error(e.getMessage());
         }
         return false;
     }
 
-    //listener to get result
+    // listener to get result
     private IEsptouchListener myListener = new IEsptouchListener() {
         @Override
         public void onEsptouchResultAdded(final IEsptouchResult result) {
-            String text = "bssid="+ result.getBssid()+",InetAddress="+result.getInetAddress().getHostAddress();
+            String text = "bssid=" + result.getBssid() + ",InetAddress=" + result.getInetAddress().getHostAddress();
             PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, text);
-            pluginResult.setKeepCallback(true);           // keep callback after this call
-            //receivingCallbackContext.sendPluginResult(pluginResult);    //modified by lianghuiyuan
+            pluginResult.setKeepCallback(true); // keep callback after this call
+            // receivingCallbackContext.sendPluginResult(pluginResult); //modified by
+            // lianghuiyuan
         }
     };
 }

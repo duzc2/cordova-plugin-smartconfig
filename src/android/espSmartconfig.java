@@ -65,7 +65,7 @@ public class espSmartconfig extends CordovaPlugin {
                             isSsidHidden = true;
                         }
                         mEsptouchTask = new EsptouchTask(apSsid, apBssid, apPassword,
-                        isSsidHidden, cordova.getActivity());
+                        isSsidHidden, cordova.getActivity().getApplicationContext());
                         mEsptouchTask.setEsptouchListener(myListener);
                     }
                     List<IEsptouchResult> resultList = mEsptouchTask.executeForResults(taskResultCount);
